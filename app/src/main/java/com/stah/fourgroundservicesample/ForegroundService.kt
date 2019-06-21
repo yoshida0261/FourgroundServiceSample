@@ -1,6 +1,5 @@
 package com.stah.fourgroundservicesample
 
-import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -8,7 +7,6 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 
 
@@ -20,16 +18,8 @@ class ForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
 
+        // oncreateで呼べばいい
         createNotificationChannel()
-        println("service oncreate")
-    }
-
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        println("service onStartCommand")
-
-
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this, 0, notificationIntent, 0
@@ -38,24 +28,31 @@ class ForegroundService : Service() {
         val notification = NotificationCompat.Builder(this, "test")
             .setContentTitle("Foreground Service")
             .setContentText("Foreground Service Example in Android")
-            .setSmallIcon(R.drawable.sym_def_app_icon)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .build()
 
         startForeground(1, notification)
 
+        println("service oncreate")
+    }
 
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        println("service onStartCommand")
+
+        // serviceで実行したい処理を書く
         Thread(
             Runnable {
-                (0..5).map {
+                (0..4).map {
                     Thread.sleep(1000)
                     println("foreground service $it")
                 }
                 stopForeground(true)
+                // stop selftかstopServiceを呼ばないとサービスは生きる続けてしまう(onDestroyが呼ばれない)
                 stopSelf()
 
             }).start()
-
 
         return START_STICKY
 
